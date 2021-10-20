@@ -42,7 +42,9 @@ static const uint32_t COMMIT_OUTPUT_STATE =
 	WLR_OUTPUT_STATE_ENABLED |
 	WLR_OUTPUT_STATE_GAMMA_LUT |
 	WLR_OUTPUT_STATE_ADAPTIVE_SYNC_ENABLED |
-	WLR_OUTPUT_STATE_LAYERS;
+	WLR_OUTPUT_STATE_LAYERS |
+	WLR_OUTPUT_STATE_WAIT_TIMELINE |
+	WLR_OUTPUT_STATE_SIGNAL_TIMELINE;
 
 static const uint32_t SUPPORTED_OUTPUT_STATE =
 	WLR_OUTPUT_STATE_BACKEND_OPTIONAL | COMMIT_OUTPUT_STATE;
@@ -574,6 +576,8 @@ static void drm_connector_state_init(struct wlr_drm_connector_state *state,
 		.connector = conn,
 		.base = base,
 		.active = output_pending_enabled(&conn->output, base),
+		.primary_in_fence_fd = -1,
+		.out_fence_fd = -1,
 	};
 
 	struct wlr_output_mode *mode = conn->output.current_mode;
@@ -1572,6 +1576,10 @@ static bool connect_drm_connector(struct wlr_drm_connector *wlr_conn,
 		}
 		output->non_desktop = non_desktop;
 	}
+
+	// TODO: support sync timelines in multi-GPU mode
+	// TODO: support sync timelines with libliftoff
+	output->timeline = drm->parent == NULL && drm->iface == &atomic_iface;
 
 	memset(wlr_conn->max_bpc_bounds, 0, sizeof(wlr_conn->max_bpc_bounds));
 	if (wlr_conn->props.max_bpc != 0) {
