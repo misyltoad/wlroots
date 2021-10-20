@@ -563,9 +563,19 @@ static bool output_basic_test(struct wlr_output *output,
 			wlr_log(WLR_DEBUG, "Primary buffer size mismatch");
 			return false;
 		}
-	} else if (state->tearing_page_flip) {
-		wlr_log(WLR_ERROR, "Trying to commit a tearing page flip without a buffer?");
-		return false;
+	} else {
+		if (state->tearing_page_flip) {
+			wlr_log(WLR_ERROR, "Tried to commit a tearing page flip without a buffer");
+			return false;
+		}
+		if (state->committed & WLR_OUTPUT_STATE_WAIT_TIMELINE) {
+			wlr_log(WLR_DEBUG, "Tried to set wait timeline without a buffer");
+			return false;
+		}
+		if (state->committed & WLR_OUTPUT_STATE_SIGNAL_TIMELINE) {
+			wlr_log(WLR_DEBUG, "Tried to set signal timeline without a buffer");
+			return false;
+		}
 	}
 
 	if (state->committed & WLR_OUTPUT_STATE_RENDER_FORMAT) {
@@ -630,6 +640,12 @@ static bool output_basic_test(struct wlr_output *output,
 		for (size_t i = 0; i < state->layers_len; i++) {
 			state->layers[i].accepted = false;
 		}
+	}
+
+	if ((state->committed & (WLR_OUTPUT_STATE_WAIT_TIMELINE | WLR_OUTPUT_STATE_SIGNAL_TIMELINE)) &&
+			!output->timeline) {
+		wlr_log(WLR_DEBUG, "Wait/signal timelines are not supported for this output");
+		return false;
 	}
 
 	return true;

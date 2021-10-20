@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <wlr/render/timeline.h>
 #include <wlr/util/log.h>
 #include "types/wlr_output.h"
 
@@ -16,6 +17,8 @@ void wlr_output_state_finish(struct wlr_output_state *state) {
 	state->buffer = NULL;
 	pixman_region32_fini(&state->damage);
 	free(state->gamma_lut);
+	wlr_render_timeline_unref(state->wait_timeline);
+	wlr_render_timeline_unref(state->signal_timeline);
 }
 
 void wlr_output_state_set_enabled(struct wlr_output_state *state,
@@ -114,6 +117,22 @@ void wlr_output_state_set_layers(struct wlr_output_state *state,
 	state->layers_len = layers_len;
 }
 
+void wlr_output_state_set_wait_timeline(struct wlr_output_state *state,
+		struct wlr_render_timeline *timeline, uint64_t src_point) {
+	state->committed |= WLR_OUTPUT_STATE_WAIT_TIMELINE;
+	wlr_render_timeline_unref(state->wait_timeline);
+	state->wait_timeline = wlr_render_timeline_ref(timeline);
+	state->wait_point = src_point;
+}
+
+void wlr_output_state_set_signal_timeline(struct wlr_output_state *state,
+		struct wlr_render_timeline *timeline, uint64_t dst_point) {
+	state->committed |= WLR_OUTPUT_STATE_SIGNAL_TIMELINE;
+	wlr_render_timeline_unref(state->signal_timeline);
+	state->signal_timeline = wlr_render_timeline_ref(timeline);
+	state->signal_point = dst_point;
+}
+
 bool wlr_output_state_copy(struct wlr_output_state *dst,
 		const struct wlr_output_state *src) {
 	struct wlr_output_state copy = *src;
@@ -140,6 +159,15 @@ bool wlr_output_state_copy(struct wlr_output_state *dst,
 		if (!wlr_output_state_set_gamma_lut(&copy, src->gamma_lut_size, r, g, b)) {
 			goto err;
 		}
+	}
+
+	if (src->committed & WLR_OUTPUT_STATE_WAIT_TIMELINE) {
+		wlr_output_state_set_wait_timeline(&copy, src->wait_timeline,
+			src->wait_point);
+	}
+	if (src->committed & WLR_OUTPUT_STATE_SIGNAL_TIMELINE) {
+		wlr_output_state_set_signal_timeline(&copy, src->signal_timeline,
+			src->signal_point);
 	}
 
 	wlr_output_state_finish(dst);
