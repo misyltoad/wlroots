@@ -38,6 +38,11 @@ struct wlr_render_timeline {
  */
 struct wlr_render_timeline *wlr_render_timeline_create(int drm_fd);
 /**
+ * Import a timeline from a drm_syncobj FD.
+ */
+struct wlr_render_timeline *wlr_render_timeline_import(int drm_fd,
+	int drm_syncobj_fd);
+/**
  * Reference a synchronization timeline.
  */
 struct wlr_render_timeline *wlr_render_timeline_ref(struct wlr_render_timeline *timeline);

@@ -21,6 +21,24 @@ struct wlr_render_timeline *wlr_render_timeline_create(int drm_fd) {
 	return timeline;
 }
 
+struct wlr_render_timeline *wlr_render_timeline_import(int drm_fd,
+		int drm_syncobj_fd) {
+	struct wlr_render_timeline *timeline = calloc(1, sizeof(*timeline));
+	if (timeline == NULL) {
+		return NULL;
+	}
+	timeline->drm_fd = drm_fd;
+	timeline->n_refs = 1;
+
+	if (drmSyncobjFDToHandle(drm_fd, drm_syncobj_fd, &timeline->handle) != 0) {
+		wlr_log_errno(WLR_ERROR, "drmSyncobjFDToHandle failed");
+		free(timeline);
+		return NULL;
+	}
+
+	return timeline;
+}
+
 struct wlr_render_timeline *wlr_render_timeline_ref(struct wlr_render_timeline *timeline) {
 	timeline->n_refs++;
 	return timeline;
