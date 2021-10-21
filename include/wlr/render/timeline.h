@@ -51,6 +51,13 @@ struct wlr_render_timeline *wlr_render_timeline_ref(struct wlr_render_timeline *
  */
 void wlr_render_timeline_unref(struct wlr_render_timeline *timeline);
 /**
+ * Transfer a point from a timeline to another.
+ *
+ * Both timelines must have been created with the same DRM FD.
+ */
+bool wlr_render_timeline_transfer(struct wlr_render_timeline *dst,
+	uint64_t dst_point, struct wlr_render_timeline *src, uint64_t src_point);
+/**
  * Export a timeline point as a sync_file FD.
  *
  * The returned sync_file will be signalled when the provided point is

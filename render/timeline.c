@@ -59,6 +59,19 @@ void wlr_render_timeline_unref(struct wlr_render_timeline *timeline) {
 	free(timeline);
 }
 
+bool wlr_render_timeline_transfer(struct wlr_render_timeline *dst,
+		uint64_t dst_point, struct wlr_render_timeline *src, uint64_t src_point) {
+	assert(dst->drm_fd == src->drm_fd);
+
+	if (drmSyncobjTransfer(dst->drm_fd, dst->handle, dst_point,
+			src->handle, src_point, 0) != 0) {
+		wlr_log_errno(WLR_ERROR, "drmSyncobjTransfer failed");
+		return false;
+	}
+
+	return true;
+}
+
 int wlr_render_timeline_export_sync_file(struct wlr_render_timeline *timeline,
 		uint64_t src_point) {
 	int sync_file_fd = -1;
