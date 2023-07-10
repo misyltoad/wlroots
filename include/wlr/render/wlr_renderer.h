@@ -27,6 +27,15 @@ struct wlr_fbox;
  */
 struct wlr_renderer {
 	struct {
+		/**
+		 * Whether wait/signal timelines are supported.
+		 *
+		 * See struct wlr_render_timeline.
+		 */
+		bool timeline;
+	} features;
+
+	struct {
 		struct wl_signal destroy;
 		/**
 		 * Emitted when the GPU is lost, e.g. on GPU reset.
