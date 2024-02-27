@@ -55,6 +55,10 @@ struct wlr_render_timeline *wlr_render_timeline_ref(struct wlr_render_timeline *
  */
 void wlr_render_timeline_unref(struct wlr_render_timeline *timeline);
 /**
+ * Export a drm_syncobj FD from a timeline.
+ */
+int wlr_render_timeline_export(struct wlr_render_timeline *timeline);
+/**
  * Transfer a point from a timeline to another.
  *
  * Both timelines must have been created with the same DRM FD.
