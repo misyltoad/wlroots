@@ -122,6 +122,12 @@ void wlr_seat_set_keyboard(struct wlr_seat *seat,
 		return;
 	}
 
+	// send the keymap only if it has changed
+	bool needs_keymap_update = \
+		!seat->keyboard_state.keyboard || !keyboard ||
+		seat->keyboard_state.keyboard->keymap_size != keyboard->keymap_size ||
+		strcmp(seat->keyboard_state.keyboard->keymap_string, keyboard->keymap_string) != 0;
+
 	if (seat->keyboard_state.keyboard) {
 		wl_list_remove(&seat->keyboard_state.keyboard_destroy.link);
 		wl_list_remove(&seat->keyboard_state.keyboard_keymap.link);
@@ -145,7 +151,9 @@ void wlr_seat_set_keyboard(struct wlr_seat *seat,
 
 		struct wlr_seat_client *client;
 		wl_list_for_each(client, &seat->clients, link) {
-			seat_client_send_keymap(client, keyboard);
+			if (needs_keymap_update) {
+				seat_client_send_keymap(client, keyboard);
+			}
 			seat_client_send_repeat_info(client, keyboard);
 		}
 
