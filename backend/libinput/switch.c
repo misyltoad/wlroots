@@ -7,6 +7,7 @@
 #include <wlr/util/log.h>
 #include "backend/libinput.h"
 #include "util/signal.h"
+#include "config.h"
 
 struct wlr_switch *create_libinput_switch(
 		struct libinput_device *libinput_dev) {
@@ -40,6 +41,11 @@ void handle_switch_toggle(struct libinput_event *event,
 	case LIBINPUT_SWITCH_TABLET_MODE:
 		wlr_event.switch_type = WLR_SWITCH_TYPE_TABLET_MODE;
 		break;
+#if HAVE_LIBINPUT_SWITCH_KEYPAD_SLIDE
+	case LIBINPUT_SWITCH_KEYPAD_SLIDE:
+		wlr_event.switch_type = WLR_SWITCH_TYPE_KEYPAD_SLIDE;
+		break;
+#endif
 	}
 	switch (libinput_event_switch_get_switch_state(sevent)) {
 	case LIBINPUT_SWITCH_STATE_OFF:
